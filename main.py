@@ -1,5 +1,9 @@
-# 초기 프롬프트 데이터
-프롬프트_목록 = [
+import json
+import os
+
+파일이름 = "prompts.json"
+
+초기_프롬프트_목록 = [
     {
         "title": "블로그 마케팅 코치 '나비' — 시스템 프롬프트",
         "category": "텍스트 생성",
@@ -68,6 +72,24 @@
 ]
 
 
+def 파일에서_불러오기():
+    if os.path.exists(파일이름):
+        with open(파일이름, "r", encoding="utf-8") as file:
+            return json.load(file)
+    else:
+        with open(파일이름, "w", encoding="utf-8") as file:
+            json.dump(초기_프롬프트_목록, file, ensure_ascii=False, indent=4)
+        return 초기_프롬프트_목록.copy()
+
+
+프롬프트_목록 = 파일에서_불러오기()
+
+
+def 파일에_저장하기():
+    with open(파일이름, "w", encoding="utf-8") as file:
+        json.dump(프롬프트_목록, file, ensure_ascii=False, indent=4)
+
+
 def show_menu():
     print("\n=== 프롬프트 관리 프로그램 ===")
     print("1. 프롬프트 저장")
@@ -92,6 +114,7 @@ def save_prompt():
     }
 
     프롬프트_목록.append(새_프롬프트)
+    파일에_저장하기()
     print("프롬프트가 저장되었습니다.")
 
 
@@ -105,19 +128,19 @@ def view_prompts():
     for i, prompt in enumerate(프롬프트_목록, start=1):
         print(f"{i}. {prompt['title']} ({prompt['category']})")
 
-    choice = input("\n상세 조회할 번호를 입력하세요 (엔터만 누르면 뒤로가기): ")
+    detail = input("\n상세 조회할 번호를 입력하세요 (엔터만 누르면 뒤로가기): ")
 
-    if choice == "":
+    if detail == "":
         return
 
-    if not choice.isdigit():
-        print("숫자를 입력하세요.")
+    if not detail.isdigit():
+        print("숫자를 입력해주세요.")
         return
 
-    index = int(choice) - 1
+    index = int(detail) - 1
 
     if index < 0 or index >= len(프롬프트_목록):
-        print("올바른 번호를 입력하세요.")
+        print("올바른 번호를 입력해주세요.")
         return
 
     prompt = 프롬프트_목록[index]
@@ -127,8 +150,7 @@ def view_prompts():
     print(f"카테고리: {prompt['category']}")
     print(f"즐겨찾기: {prompt['favorite']}")
     print(f"출처: {prompt['source']}")
-    print("내용:")
-    print(prompt["content"])
+    print(f"내용:\n{prompt['content']}")
 
 
 def main():
