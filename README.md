@@ -14,6 +14,19 @@
 
 ---
 
+## 카테고리 종류
+
+| 카테고리 | 설명 |
+|---|---|
+| 텍스트 생성 | 블로그, 카피라이팅 등 글쓰기 프롬프트 |
+| 이미지 생성 | Midjourney, DALL-E 등 이미지 생성 프롬프트 |
+| 영상 생성 | 영상 제작 관련 프롬프트 |
+| 페르소나 | 역할극, 캐릭터 설정 프롬프트 |
+| 자동화 | 반복 작업 자동화 프롬프트 |
+| 기타 | 위 분류에 해당하지 않는 프롬프트 |
+
+---
+
 ## 실행 방법
 
 ```bash
@@ -109,6 +122,22 @@ prompt-manager/
 
 ---
 
+## 저장소 정보
+
+- GitHub 저장소: [https://github.com/geunwa/prompt-manager](https://github.com/geunwa/prompt-manager)
+
+---
+
 ## Git 관리
 
 ![Git Pull 확인](./screenshot/12_git_pull.png)
+
+---
+
+### Git 명령어 실행 화면
+
+| 명령어 | 스크린샷 |
+|--------|---------|
+| `git log --oneline --graph` | ![git log](./screenshot/13_git_log.png) |
+| `git clone` | ![git clone](./screenshot/14_git_clone.png) |
+| `git pull` | ![git pull](./screenshot/12_git_pull.png) |
