@@ -1,13 +1,13 @@
-```python
 import json
 import os
 
 FILE_NAME = "prompts.json"
 
+
 default_prompts = [
     {
         "title": "블로그 마케팅 코치 네비",
-        "content": "당신은 초보 사장님을 위한 블로그 마케팅 코치입니다. 사용자의 업종, 타깃 고객, 목표를 묻고 블로그 글 주제 5개와 각 주제별 소제목을 제안하세요.",
+        "content": "당신은 초보 사업자를 위한 블로그 마케팅 코치입니다. 사용자의 업종, 타깃 고객, 목표를 묻고 블로그 글 주제 5개와 각 주제별 소개문을 제안하세요.",
         "category": "텍스트 생성",
         "favorite": False,
         "source": "기본 프롬프트"
@@ -20,8 +20,8 @@ default_prompts = [
         "source": "기본 프롬프트"
     },
     {
-        "title": "업무 자동화 아이디어 생성기",
-        "content": "사용자가 하는 반복 업무를 입력하면 자동화할 수 있는 아이디어 3가지를 제안하고, 각 방법의 장단점을 정리하세요.",
+        "title": "업무 자동화 아이디어 메이커",
+        "content": "당신은 업무 자동화 컨설턴트입니다. 사용자가 하는 반복 업무를 입력하면 자동화 가능한 아이디어 3가지를 난이도와 함께 제안하세요.",
         "category": "자동화",
         "favorite": False,
         "source": "기본 프롬프트"
@@ -30,276 +30,234 @@ default_prompts = [
 
 
 def load_prompts():
-    if os.path.exists(FILE_NAME):
-        try:
-            with open(FILE_NAME, "r", encoding="utf-8") as file:
-                data = json.load(file)
+    if not os.path.exists(FILE_NAME):
+        save_prompts(default_prompts)
+        return default_prompts.copy()
 
-            if not isinstance(data, list):
-                raise json.JSONDecodeError("Invalid format", "", 0)
-
-            for prompt in data:
-                if "title" not in prompt:
-                    prompt["title"] = "제목 없음"
-                if "content" not in prompt:
-                    prompt["content"] = ""
-                if "category" not in prompt or not str(prompt["category"]).strip():
-                    prompt["category"] = "미분류"
-                if "favorite" not in prompt:
-                    prompt["favorite"] = False
-                if "source" not in prompt:
-                    prompt["source"] = ""
-
-            return data
-
-        except (json.JSONDecodeError, FileNotFoundError):
-            with open(FILE_NAME, "w", encoding="utf-8") as file:
-                json.dump(default_prompts, file, ensure_ascii=False, indent=4)
-            return [prompt.copy() for prompt in default_prompts]
-
-    else:
-        with open(FILE_NAME, "w", encoding="utf-8") as file:
-            json.dump(default_prompts, file, ensure_ascii=False, indent=4)
-        return [prompt.copy() for prompt in default_prompts]
+    try:
+        with open(FILE_NAME, "r", encoding="utf-8") as file:
+            data = json.load(file)
+            if isinstance(data, list):
+                return data
+            return default_prompts.copy()
+    except (json.JSONDecodeError, FileNotFoundError):
+        save_prompts(default_prompts)
+        return default_prompts.copy()
 
 
-def save_prompts_to_file():
+def save_prompts(prompts):
     with open(FILE_NAME, "w", encoding="utf-8") as file:
         json.dump(prompts, file, ensure_ascii=False, indent=4)
 
 
-def show_menu():
-    print("\n===== 프롬프트 관리 프로그램 =====")
-    print("1. 프롬프트 추가")
-    print("2. 전체 프롬프트 조회")
+def display_menu():
+    print("\n===== AI 프롬프트 관리 프로그램 =====")
+    print("1. 전체 프롬프트 조회")
+    print("2. 프롬프트 추가")
     print("3. 프롬프트 검색")
     print("4. 프롬프트 상세 보기")
     print("5. 즐겨찾기 토글")
     print("6. 프롬프트 삭제")
-    print("7. 카테고리별 Markdown 파일로 내보내기")
+    print("7. 카테고리별 Markdown 내보내기")
     print("0. 종료")
 
 
-def add_prompt():
-    print("\n[프롬프트 추가]")
+def view_all_prompts(prompts):
+    if not prompts:
+        print("\n저장된 프롬프트가 없습니다.")
+        return
+
+    print("\n===== 전체 프롬프트 목록 =====")
+    for index, prompt in enumerate(prompts, start=1):
+        favorite_mark = "★" if prompt.get("favorite", False) else " "
+        print(f"{index}. [{favorite_mark}] {prompt['title']} / {prompt['category']}")
+
+
+def add_prompt(prompts):
+    print("\n===== 새 프롬프트 추가 =====")
     title = input("제목: ").strip()
     content = input("내용: ").strip()
     category = input("카테고리: ").strip()
-    source = input("출처(없으면 엔터): ").strip()
+    source = input("출처: ").strip()
 
-    if not title:
-        print("제목은 비워둘 수 없습니다.")
+    if not title or not content or not category:
+        print("제목, 내용, 카테고리는 비워둘 수 없습니다.")
         return
-
-    if not content:
-        print("내용은 비워둘 수 없습니다.")
-        return
-
-    if not category:
-        category = "미분류"
 
     new_prompt = {
         "title": title,
         "content": content,
         "category": category,
         "favorite": False,
-        "source": source
+        "source": source if source else "직접 작성"
     }
 
     prompts.append(new_prompt)
-    save_prompts_to_file()
-    print(f"\"{title}\" 프롬프트가 저장되었습니다.")
+    save_prompts(prompts)
+    print("프롬프트가 저장되었습니다.")
 
 
-def show_all_prompts():
-    print("\n[전체 프롬프트 조회]")
-
-    if not prompts:
-        print("저장된 프롬프트가 없습니다.")
-        return
-
-    for i, prompt in enumerate(prompts, 1):
-        favorite_mark = "★" if prompt.get("favorite", False) else " "
-        print(f"{i}. [{favorite_mark}] {prompt['title']} / 카테고리: {prompt['category']}")
-
-
-def search_prompts():
-    print("\n[프롬프트 검색]")
-    keyword = input("검색어를 입력하세요: ").strip().lower()
+def search_prompts(prompts):
+    keyword = input("\n검색어를 입력하세요: ").strip().lower()
 
     if not keyword:
-        print("검색어를 입력해주세요.")
+        print("검색어를 입력해야 합니다.")
         return
 
     results = []
+    for index, prompt in enumerate(prompts, start=1):
+        title = prompt.get("title", "").lower()
+        content = prompt.get("content", "").lower()
+        category = prompt.get("category", "").lower()
 
-    for i, prompt in enumerate(prompts, 1):
-        if (
-            keyword in prompt.get("title", "").lower()
-            or keyword in prompt.get("content", "").lower()
-            or keyword in prompt.get("category", "").lower()
-        ):
-            results.append((i, prompt))
+        if keyword in title or keyword in content or keyword in category:
+            results.append((index, prompt))
 
     if not results:
         print("검색 결과가 없습니다.")
         return
 
-    print(f"\"{keyword}\" 검색 결과:")
+    print("\n===== 검색 결과 =====")
     for index, prompt in results:
         favorite_mark = "★" if prompt.get("favorite", False) else " "
-        print(f"{index}. [{favorite_mark}] {prompt['title']} / 카테고리: {prompt['category']}")
+        print(f"{index}. [{favorite_mark}] {prompt['title']} / {prompt['category']}")
 
 
-def show_prompt_detail():
-    print("\n[프롬프트 상세 보기]")
-
+def view_prompt_detail(prompts):
     if not prompts:
-        print("저장된 프롬프트가 없습니다.")
+        print("\n저장된 프롬프트가 없습니다.")
         return
 
-    show_all_prompts()
+    view_all_prompts(prompts)
 
     try:
-        number = int(input("상세히 볼 프롬프트 번호를 입력하세요: "))
-        if 1 <= number <= len(prompts):
-            prompt = prompts[number - 1]
-            print("\n----- 프롬프트 상세 정보 -----")
-            print(f"제목: {prompt.get('title', '제목 없음')}")
-            print(f"카테고리: {prompt.get('category', '미분류')}")
-            print(f"즐겨찾기: {'Yes' if prompt.get('favorite', False) else 'No'}")
-            print(f"출처: {prompt.get('source', '') if prompt.get('source', '') else '없음'}")
-            print("내용:")
-            print(prompt.get("content", ""))
-            print("-----------------------------")
-        else:
+        choice = int(input("\n상세 보기할 번호를 입력하세요: "))
+        if choice < 1 or choice > len(prompts):
             print("올바른 번호를 입력하세요.")
+            return
     except ValueError:
         print("숫자를 입력하세요.")
-
-
-def toggle_favorite():
-    print("\n[즐겨찾기 토글]")
-
-    if not prompts:
-        print("저장된 프롬프트가 없습니다.")
         return
 
-    show_all_prompts()
-
-    try:
-        number = int(input("즐겨찾기를 변경할 프롬프트 번호를 입력하세요: "))
-        if 1 <= number <= len(prompts):
-            prompts[number - 1]["favorite"] = not prompts[number - 1].get("favorite", False)
-            save_prompts_to_file()
-
-            if prompts[number - 1]["favorite"]:
-                print("즐겨찾기에 추가되었습니다.")
-            else:
-                print("즐겨찾기에서 해제되었습니다.")
-        else:
-            print("올바른 번호를 입력하세요.")
-    except ValueError:
-        print("숫자를 입력하세요.")
+    prompt = prompts[choice - 1]
+    print("\n===== 프롬프트 상세 정보 =====")
+    print(f"제목: {prompt.get('title', '')}")
+    print(f"카테고리: {prompt.get('category', '')}")
+    print(f"즐겨찾기: {'예' if prompt.get('favorite', False) else '아니오'}")
+    print(f"출처: {prompt.get('source', '')}")
+    print(f"내용: {prompt.get('content', '')}")
 
 
-def delete_prompt():
-    print("\n[프롬프트 삭제]")
-
+def toggle_favorite(prompts):
     if not prompts:
-        print("저장된 프롬프트가 없습니다.")
+        print("\n저장된 프롬프트가 없습니다.")
         return
 
-    show_all_prompts()
+    view_all_prompts(prompts)
 
     try:
-        number = int(input("삭제할 프롬프트 번호를 입력하세요: "))
-        if 1 <= number <= len(prompts):
-            deleted = prompts.pop(number - 1)
-            save_prompts_to_file()
-            print(f"\"{deleted['title']}\" 프롬프트가 삭제되었습니다.")
-        else:
+        choice = int(input("\n즐겨찾기 상태를 바꿀 번호를 입력하세요: "))
+        if choice < 1 or choice > len(prompts):
             print("올바른 번호를 입력하세요.")
+            return
     except ValueError:
         print("숫자를 입력하세요.")
+        return
+
+    prompts[choice - 1]["favorite"] = not prompts[choice - 1].get("favorite", False)
+    save_prompts(prompts)
+
+    if prompts[choice - 1]["favorite"]:
+        print("즐겨찾기에 추가되었습니다.")
+    else:
+        print("즐겨찾기에서 해제되었습니다.")
+
+
+def delete_prompt(prompts):
+    if not prompts:
+        print("\n저장된 프롬프트가 없습니다.")
+        return
+
+    view_all_prompts(prompts)
+
+    try:
+        choice = int(input("\n삭제할 번호를 입력하세요: "))
+        if choice < 1 or choice > len(prompts):
+            print("올바른 번호를 입력하세요.")
+            return
+    except ValueError:
+        print("숫자를 입력하세요.")
+        return
+
+    deleted_prompt = prompts.pop(choice - 1)
+    save_prompts(prompts)
+    print(f"'{deleted_prompt['title']}' 프롬프트가 삭제되었습니다.")
 
 
 def sanitize_filename(name):
-    invalid_chars = '\\/:*?"<>|'
+    invalid_chars = '<>:"/\\|?*'
+    safe_name = name.strip()
     for char in invalid_chars:
-        name = name.replace(char, "_")
-    return name.strip() if name.strip() else "미분류"
+        safe_name = safe_name.replace(char, "_")
+    return safe_name if safe_name else "기타"
 
 
-def export_prompts_to_markdown():
-    print("\n[카테고리별 Markdown 내보내기]")
-
+def export_markdown_by_category(prompts):
     if not prompts:
-        print("내보낼 프롬프트가 없습니다.")
+        print("\n내보낼 프롬프트가 없습니다.")
         return
 
     export_dir = "markdown_exports"
     os.makedirs(export_dir, exist_ok=True)
 
-    categories = {}
-
+    grouped_prompts = {}
     for prompt in prompts:
-        category = str(prompt.get("category", "미분류")).strip()
+        category = prompt.get("category", "기타").strip()
         if not category:
-            category = "미분류"
+            category = "기타"
+        grouped_prompts.setdefault(category, []).append(prompt)
 
-        if category not in categories:
-            categories[category] = []
-
-        categories[category].append(prompt)
-
-    for category, prompt_list in categories.items():
-        safe_name = sanitize_filename(category)
-        file_path = os.path.join(export_dir, f"{safe_name}.md")
+    for category, items in grouped_prompts.items():
+        safe_category = sanitize_filename(category)
+        file_path = os.path.join(export_dir, f"{safe_category}.md")
 
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(f"# {category} 프롬프트 모음\n\n")
-            file.write(f"- 총 개수: {len(prompt_list)}개\n\n")
 
-            for i, prompt in enumerate(prompt_list, 1):
-                title = prompt.get("title", "제목 없음")
-                content = prompt.get("content", "")
-                favorite = "Yes" if prompt.get("favorite", False) else "No"
-                source = prompt.get("source", "")
-
-                file.write(f"## {i}. {title}\n\n")
-                file.write(f"- 카테고리: {category}\n")
-                file.write(f"- 즐겨찾기: {favorite}\n")
-                file.write(f"- 출처: {source if source else '없음'}\n\n")
-                file.write("### 내용\n\n")
-                file.write(f"{content}\n\n")
+            for index, prompt in enumerate(items, start=1):
+                favorite_text = "예" if prompt.get("favorite", False) else "아니오"
+                file.write(f"## {index}. {prompt.get('title', '')}\n\n")
+                file.write(f"- 카테고리: {prompt.get('category', '')}\n")
+                file.write(f"- 즐겨찾기: {favorite_text}\n")
+                file.write(f"- 출처: {prompt.get('source', '')}\n\n")
+                file.write("### 내용\n")
+                file.write(f"{prompt.get('content', '')}\n\n")
                 file.write("---\n\n")
 
-    print(f"Markdown 파일이 \"{export_dir}\" 폴더에 저장되었습니다.")
-
-
-prompts = load_prompts()
+    print(f"\nMarkdown 내보내기가 완료되었습니다. '{export_dir}' 폴더를 확인하세요.")
 
 
 def main():
+    prompts = load_prompts()
+
     while True:
-        show_menu()
-        choice = input("메뉴 선택: ").strip()
+        display_menu()
+        choice = input("메뉴 번호를 선택하세요: ").strip()
 
         if choice == "1":
-            add_prompt()
+            view_all_prompts(prompts)
         elif choice == "2":
-            show_all_prompts()
+            add_prompt(prompts)
         elif choice == "3":
-            search_prompts()
+            search_prompts(prompts)
         elif choice == "4":
-            show_prompt_detail()
+            view_prompt_detail(prompts)
         elif choice == "5":
-            toggle_favorite()
+            toggle_favorite(prompts)
         elif choice == "6":
-            delete_prompt()
+            delete_prompt(prompts)
         elif choice == "7":
-            export_prompts_to_markdown()
+            export_markdown_by_category(prompts)
         elif choice == "0":
             print("프로그램을 종료합니다.")
             break
@@ -309,30 +267,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
-
-## 실행 방법
-
-```bash
-python main.py
-```
-
-## 보너스 과제 확인 방법
-
-1. 프로그램 실행
-2. 메뉴에서 `7` 선택
-3. 프로젝트 폴더 안에 `markdown_exports` 폴더가 생성되는지 확인
-4. 카테고리별 `.md` 파일이 생성되는지 확인
-
-예:
-- `markdown_exports/텍스트 생성.md`
-- `markdown_exports/학습.md`
-- `markdown_exports/자동화.md`
-
-## 추천 커밋 메시지
-
-```bash
-git add .
-git commit -m "feat: 카테고리별 markdown 내보내기 기능 추가"
-git push
-```
