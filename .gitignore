@@ -15,3 +15,5 @@ env/
 
 # Development helper file
 test_api.py
+__pycache__/
+*.pyc
